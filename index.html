@@ -67,6 +67,7 @@
           toiletMarkers.forEach(marker => map.removeLayer(marker));
           toiletMarkers = [];
 
+          // 서울시 공중화장실 데이터 가져오기
           const toiletData = await fetch('toilets.json').then(res => res.json());
 
           function getDistance(lat1, lon1, lat2, lon2) {
@@ -112,3 +113,4 @@
   </script>
 </body>
 </html>
+
