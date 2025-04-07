@@ -25,6 +25,15 @@
     let userMarker = null;
     let toiletMarkers = [];
 
+    // 서울시 화장실 데이터 일부 예시
+    const toiletData = [
+      { "name": "서울역 공중화장실", "address": "서울 중구 세종대로 18", "latitude": 37.5547, "longitude": 126.9706 },
+      { "name": "광화문역 화장실", "address": "서울 종로구 세종대로 175", "latitude": 37.5716, "longitude": 126.9769 },
+      { "name": "시청역 공중화장실", "address": "서울 중구 덕수궁길 15", "latitude": 37.5658, "longitude": 126.9769 },
+      { "name": "동대문역사문화공원역", "address": "서울 중구 을지로 281", "latitude": 37.5656, "longitude": 127.0094 },
+      { "name": "잠실역 공중화장실", "address": "서울 송파구 올림픽로 240", "latitude": 37.5110, "longitude": 127.0980 }
+    ];
+
     function initMap(lat, lon) {
       if (!map) {
         map = L.map('map').setView([lat, lon], 15);
@@ -39,64 +48,9 @@
       userMarker = L.marker([lat, lon]).addTo(map).bindPopup('내 위치').openPopup();
     }
 
-    async function getLocation() {
+    function getLocation() {
       const status = document.getElementById('status');
       const list = document.getElementById('toilet-list');
       list.innerHTML = '';
-      status.textContent = '위치를 찾는 중...';
+      status.textContent = '위치를 찾는 중
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          status.textContent = `내 위치: (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
-
-          initMap(lat, lon);
-
-          toiletMarkers.forEach(marker => map.removeLayer(marker));
-          toiletMarkers = [];
-
-          const toiletData = await fetch('toilets.json').then(res => res.json());
-
-          function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI / 180) *
-                      Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) ** 2;
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-          }
-
-          const nearby = toiletData
-            .map(toilet => ({
-              ...toilet,
-              distance: getDistance(lat, lon, toilet.latitude, toilet.longitude)
-            }))
-            .sort((a, b) => a.distance - b.distance)
-            .slice(0, 10);
-
-          nearby.forEach(t => {
-            const marker = L.marker([t.latitude, t.longitude])
-              .addTo(map)
-              .bindPopup(`<strong>${t.name}</strong><br>${t.address}<br>${t.distance.toFixed(2)} km`);
-            toiletMarkers.push(marker);
-          });
-
-          list.innerHTML = nearby.map(t =>
-            `<div class="toilet-item">
-              <strong>${t.name}</strong><br>
-              주소: ${t.address}<br>
-              거리: ${t.distance.toFixed(2)} km
-            </div>`
-          ).join('');
-        }, () => {
-          status.textContent = '위치 정보를 가져올 수 없습니다.';
-        });
-      } else {
-        status.textContent = '브라우저가 위치 정보를 지원하지 않습니다.';
-      }
-    }
-  </script>
-</body>
-</html>
